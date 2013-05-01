@@ -8,7 +8,6 @@
  */
 
 require_once "../src/StravaApiLib.php";
-require_once "../src/UserAuthentication.php";
 require_once 'PHPUnit/Autoload.php';
 
 class ApiTest extends PHPUnit_Framework_TestCase
@@ -24,6 +23,8 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $result = $response->result;
         $this->user->token = &$result['token'];
         $this->user->athlete = &$result['athlete'];
+        
+        //echo "token = ".$result['token'].PHP_EOL;
     }
 
     public function testLogin()
@@ -53,6 +54,54 @@ class ApiTest extends PHPUnit_Framework_TestCase
 
         // Has result
         $this->assertArrayHasKey('rides', $result);
+    }
+
+    /*
+     * @depends testLogin
+     */
+    public function testCreateRide() {
+        // Fake data
+        $data = array();
+        $data[] = new DataField(date(DATE_ATOM, mktime(0,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
+        $data[] = new DataField(date(DATE_ATOM, mktime(1,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
+
+        $response = $this->strava->createRide($this->user->token, $data, 'test ride');
+        $result = $response->result;
+
+        $this->assertNull($response->error);
+        $this->assertArrayHasKey('id', $result);
+        $this->assertArrayHasKey('upload_id', $result);
+
+    }
+
+    /*
+     * @depends testCreateRide
+     */
+    public function testGetUploadStatus() {
+        // Fake data
+        $data = array();
+        $data[] = new DataField(date(DATE_ATOM, mktime(0,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
+        $data[] = new DataField(date(DATE_ATOM, mktime(1,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
+
+        $response = $this->strava->createRide($this->user->token, $data, 'test ride');
+        $uploadResult = $response->result;
+        $response = $this->strava->getUploadStatus($this->user->token, $uploadResult['upload_id']);
+        $statusResult = $response->result;
+        $this->assertArrayHasKey('id', $statusResult);
+        $this->assertArrayHasKey('upload_status', $statusResult);
+
+    }
+
+    /*
+     * @depends testRidesIndex
+     */
+    public function testShowRide() {
+        // Get list of rides
+        $response = $this->strava->ridesIndex($this->user->athlete['id']);
+        $result = $response->result;
+
+
+
     }
 }
 
