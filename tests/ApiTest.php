@@ -21,9 +21,9 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $this->user = new UserAuthentication();
         $response = $this->strava->login("edward.soo@hootsuite.com", "password");
         $result = $response->result;
-        $this->user->token = &$result['token'];
-        $this->user->athlete = &$result['athlete'];
-        
+        $this->user->token = & $result['token'];
+        $this->user->athlete = & $result['athlete'];
+
         //echo "token = ".$result['token'].PHP_EOL;
     }
 
@@ -44,7 +44,8 @@ class ApiTest extends PHPUnit_Framework_TestCase
     /*
      * @depends testLogin
      */
-    public function testRidesIndex() {
+    public function testRidesIndex()
+    {
         $response = $this->strava->ridesIndex($this->user->athlete['id']);
         $result = $response->result;
 
@@ -57,13 +58,36 @@ class ApiTest extends PHPUnit_Framework_TestCase
     }
 
     /*
+     * @depends testRidesIndex
+     */
+    public function testGetMapDetails()
+    {
+        // Get list of rides
+        $response = $this->strava->ridesIndex($this->user->athlete['id']);
+        $result = $response->result;
+
+        if (count($result['rides']) > 0) {
+            $ride = $result['rides'][0];
+            $response = $this->strava->getMapDetails($this->user->token, $ride['id']);
+            $result = $response->result;
+
+            if (isset($response->error) && $response->error['code'] == 400) {
+                return;
+            }
+            $this->assertArrayHasKey('id', $result);
+            $this->assertArrayHasKey('latlng', $result);
+        }
+    }
+
+    /*
      * @depends testLogin
      */
-    public function testCreateRide() {
+    public function testCreateRide()
+    {
         // Fake data
         $data = array();
-        $data[] = new DataField(date(DATE_ATOM, mktime(0,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
-        $data[] = new DataField(date(DATE_ATOM, mktime(1,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
+        $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
+        $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
 
         $response = $this->strava->createRide($this->user->token, $data, 'test ride');
         $result = $response->result;
@@ -77,11 +101,12 @@ class ApiTest extends PHPUnit_Framework_TestCase
     /*
      * @depends testCreateRide
      */
-    public function testGetUploadStatus() {
+    public function testGetUploadStatus()
+    {
         // Fake data
         $data = array();
-        $data[] = new DataField(date(DATE_ATOM, mktime(0,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
-        $data[] = new DataField(date(DATE_ATOM, mktime(1,0,0,4,30,2013)),49.26382,-123.10432,109,10,10);
+        $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
+        $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
 
         $response = $this->strava->createRide($this->user->token, $data, 'test ride');
         $uploadResult = $response->result;
@@ -95,13 +120,21 @@ class ApiTest extends PHPUnit_Framework_TestCase
     /*
      * @depends testRidesIndex
      */
-    public function testShowRide() {
+    public function testShowRide()
+    {
         // Get list of rides
         $response = $this->strava->ridesIndex($this->user->athlete['id']);
         $result = $response->result;
 
+        if (count($result['rides']) > 0) {
+            $ride = $result['rides'][0];
+            $response = $this->strava->showRide($ride['id']);
+            $result = $response->result;
 
-
+            $this->assertNull($response->error);
+            $this->assertArrayHasKey('id', $result);
+            $this->assertArrayHasKey('ride', $result);
+        }
     }
 }
 

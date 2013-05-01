@@ -29,10 +29,11 @@ class StravaApiLib
      */
     public function login($email, $password)
     {
+        $url = self::V2_API . self::LOGIN_URL;
         $args[] = "email=$email";
         $args[] = "password=$password";
 
-        return $this->curlPost(self::V2_API . self::LOGIN_URL, $args);
+        return $this->curlPost($url, $args);
     }
 
     /*
@@ -41,7 +42,7 @@ class StravaApiLib
      */
     public function ridesIndex($athleteId = null, $athleteName = null, $clubId = null, $startDate = null, $endDate = null, $startId = null)
     {
-        $url = self::RIDES_URL;
+        $url = self::V1_API . self::RIDES_URL;
 
         $args = array();
         if ($clubId) $args[] = "clubId=$clubId";
@@ -56,7 +57,7 @@ class StravaApiLib
             $url .= implode('&', $args);
         }
 
-        return $this->curlGet(self::V1_API . $url);
+        return $this->curlGet($url);
     }
 
     /*
@@ -68,7 +69,7 @@ class StravaApiLib
      */
     public function createRide($token, $dataFieldArray, $activityName = null, $activityType = null)
     {
-        $url = self::UPLOAD_URL;
+        $url = self::V2_API . self::UPLOAD_URL;
 
         $args = array();
         $args['token'] = $token;
@@ -85,22 +86,42 @@ class StravaApiLib
 
         $json = json_encode($args);
 
-        return $this->curlPost(self::V2_API . $url, null, $json);
+        return $this->curlPost($url, null, $json);
     }
 
-    public function getUploadStatus($token, $uploadId) {
-        $url = self::UPLOAD_STATUS_URL."/$uploadId";
+    /*
+     * Get status of an upload
+     * $token - the authentication access token
+     * $uploadId - the id of the upload
+     */
+    public function getUploadStatus($token, $uploadId)
+    {
+        $url = self::V2_API . self::UPLOAD_STATUS_URL . "/$uploadId";
         $args = array("token=$token");
-        return $this->curlGet(self::V2_API . $url, $args);
+        return $this->curlGet($url, $args);
     }
+
+    /*
+     * Get an array of lat/lng points of a ride and and array of effort segments covered by the points.
+     * Each segment has an Id an 2 indices which index into the lat/lng array
+     * $token - the authentication access token
+     * $id - ride id
+     */
+    public function getMapDetails($token, $id)
+    {
+        $url = self::V2_API . self::RIDES_URL . "/$id/map_details";
+        $args = array("token=$token");
+        return $this->curlGet($url, $args);
+    }
+
 
     /*
      * Get details about a specific ride
      */
     public function showRide($id)
     {
-        $url = self::RIDES_URL . "/$id";
-        return $this->curlGet(self::V1_API . $url);
+        $url = self::V2_API . self::RIDES_URL . "/$id";
+        return $this->curlGet($url);
 
     }
 
