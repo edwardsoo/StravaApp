@@ -125,8 +125,14 @@ class StravaApiLib
 
     }
 
+
+
+    /**************************************************************************
+     * Helper functions
+     *************************************************************************/
+
     /*
-     * Default options
+     * Default options for cUrl
      */
     private function curlSetup()
     {
