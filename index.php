@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-require_once('Authentication.php');
+require_once('src/Authentication.php');
 
 /*
  *  =============================================
