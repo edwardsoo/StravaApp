@@ -15,7 +15,7 @@ require_once('StravaApiLib.php');
 session_start();
 
 verify_authentication($_GET['i'], $_GET['ts'], $_GET['token']);
-if (!$_user['authenticated']) {
+if (!$_user['authenticated'] || !(!empty($_GET['uid']) && !empty($_GET['pid']))) {
     ?>
     <html>
     <head>
@@ -31,10 +31,10 @@ if (!$_user['authenticated']) {
     exit();
 }
 $user_stream = $_GET['uid'] . '-' . $_GET['pid'];
-if (!empty($_POST['username']) && !empty($_POST['password'])) {
+if (!empty($_POST['email']) && !empty($_POST['password'])) {
     // Call Strava login API
     $strava = new StravaApiLib();
-    $response = $strava->login($_POST['username'], $_POST['password']);
+    $response = $strava->login($_POST['email'], $_POST['password']);
     if (is_null($response->error) && isset($response->result['token'])) {
         $account_data = array(
             'connected_user_name' => $response->result['athlete']['name'],
@@ -54,21 +54,59 @@ if (!empty($_POST['username']) && !empty($_POST['password'])) {
 ?>
 
 <html>
-<head>
-    <title>
-        Login | Strava
-    </title>
-    <link href="https://d26ifou2tyrp3u.cloudfront.net/assets/application-99ce040b43b04612b1cfa1baef01fc1f.css"
-          media="screen" rel="stylesheet" type="text/css"/>
-</head>
-<body>
+    <head>
+        <title>
+            Login | Strava
+        </title>
+        <link href="https://d26ifou2tyrp3u.cloudfront.net/assets/application-99ce040b43b04612b1cfa1baef01fc1f.css"
+              media="screen" rel="stylesheet" type="text/css"/>
+    </head>
+<body class="cycling-background-1 full-width fullscreen logged-out responsive">
 
-<?php if (is_array($account_data)): ?>
+<?php if (is_array($account_data)) { ?>
     <script type="text/javascript">
         window.opener.location.reload();
         window.close();
     </script>
-<?php else: ?>
-</body>
-</html>
-<?php endif ?>
+<?php } else { ?>
+    <div class="container">
+        <header>
+            <nav class="user-bar">
+                <div class="inner-content">
+                    <div class="branding"><a href="/" class="strava-logo md"
+                                             title="Return to the Strava home page">Strava</a></div>
+                    <ul class="user-nav">
+                        <li class="logged_out_nav"><a href="/register">Sign Up</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        <div class="page">
+            <div class="pageContent">
+                <div class="message page-status-message" style="display:none;">Loading …</div>
+                <div class="login-panel">
+                    <h1>
+                        Log In
+                    </h1>
+                    <?php if ($login_error) { ?>
+                        <div class="error message simple">
+                            <p>The username or password did not match. Please try again.</p>
+                        </div>
+                    <?php } ?>
+                    <form accept-charset="UTF-8" class="website" id="login_form" method="post">
+                        <label class="placeholder-label" for="email" style="display: block;"></label>
+                        <input id="email" name="email" type="email" placeholder="Email Address"
+                               style="min-height: 30px">
+                        <label class="placeholder-label" for="password" style="display: block;"></label>
+                        <input id="password" name="password" type="password" placeholder="Password"
+                               style="min-height: 30px">
+                        <button class="alt" type="submit">Log In</button>
+                    </form>
+                </div>
+                <div class="clear"></div>
+            </div>
+        </div>
+    </div>
+    </body>
+    </html>
+<?php } ?>
