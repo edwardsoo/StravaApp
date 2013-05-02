@@ -84,13 +84,20 @@ if (isset($_GET['disconnect'])) {
         $theme = $DEFAULT_THEME;
     }
     ?>
-    <link rel='stylesheet' href='css/<?php echo $theme; ?>' type="text/css" media="screen"/>
-
+    <link rel='stylesheet' href='css/<?php echo $theme; ?>.css' type="text/css" media="screen"/>
+    <style type="text/css">
+        li {
+            display: inline;
+            list-style-type: none;
+        }
+    </style>
+    <script type="text/javascript" src="js/stream-controls.js"></script>
+    <script type="text/javascript" src="js/script.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             <?php
             $protocol = ($_SERVER['HTTPS'] == 'on')? 'https://' : 'http://';
-            $receiver_path = $protocol.$_SERVER['HTTP_HOST'].dirname($_SERVER['SCRIPT_NAME']).'/app_receiver.html';
+            $receiver_path = $protocol.$_SERVER['HTTP_HOST'].'/app_receiver.html';
             ?>
             var hsp_params = {
                 apiKey: 'bppghhj1h008gg8wwg808g80g3ia90a2l6i',
@@ -106,6 +113,7 @@ if (isset($_GET['disconnect'])) {
             hsp.bind('dropuser', function () {
             });
             hsp.bind('refresh', function () {
+                stravaStream.refresh_stream();
             });
             hsp.bind('senttoapp', function () {
             });
@@ -116,15 +124,63 @@ if (isset($_GET['disconnect'])) {
             hsp.bind('sendassignmentupdates', function () {
             });
 
+            // Strava app JS
+            stravaStream.init($('#app-stream'), {
+                connected: <?php echo (int) $_user['connected']; ?>,
+                <?php if($_user['connected']): ?>
+                connected_user_id: <?php echo $_user['connected_user_id']?>,
+                connected_user_token: '<?php echo $_user['connected_user_token']?>',
+                <?php endif; ?>
+                hs_params: <?php
+                    echo json_encode(array(
+                    'uid'   => $_GET['uid'],
+                                        'pid'   => $_GET['pid'],
+                                        'i'     => $_GET['i'],
+                                        'ts'    => $_GET['ts'],
+                                        'token' => $_GET['token'],
+                                        'theme' => $_GET['theme'],
+                    ));
+                ?>,
+                template: $('#activity_template').html()
+            });
+
+            $('a.btn-connect').click(function (e) {
+                window.open('connect.php?<?php print $_SERVER['QUERY_STRING']; ?>', 'Login | Strava', 'width=600,height=380,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes');
+                e.preventDefault();
+            });
 
         })
     </script>
 
     <script id="activity_template" type="text/template">
+        <div class="hs_message" data-item-id="{{id}}">
+            <div class="hs_controls">
+                <a href="#" class="hs_icon hs_reply" title="Share">Share</a>
+                <a href="#" class="hs_icon hs_directMessage" title="Direct Message">DM</a>
+                <a href="#" class="hs_icon hs_expand">more...</a>
+            </div>
+            <a href="{{permalink}}" target="_blank" class="hs_networkName">{{name}}</a>
+            <a href="#" class="hs_postTime">{{date}}</a>
+
+            <div class="hs_messageContent">
+                <ul>
+                    <li class="hs_tooltip" title="Distance">{{distance}}km&nbsp;&nbsp;</li>
+                    <li class="hs_tooltip" title="Average Pace">{{avg_speed}}km/h&nbsp;&nbsp;</li>
+                    <li class="hs_tooltip" title="Moving Time">{{moving_time}}&nbsp;&nbsp;</li>
+                    <li class="hs_tooltip" title="Elevation Gain">{{elevation_gain}}m&nbsp;&nbsp;</li>
+                </ul>
+
+            </div>
+
+        </div>
+    </script>
+
+    <script id="activity_details_template" type="text/template">
         <div class="hs_message" data-username="{{username}}">
             <div class="hs_controls">
                 <a href="#" class="hs_icon hs_reply" title="Reply">Reply</a>
                 <a href="#" class="hs_icon hs_directMessage" title="Direct Message">DM</a>
+                <a href="#" class="hs_icon hs_expand">more...</a>
             </div>
             <a href="#" class="hs_networkName">{{username}}</a>
             <a href="{{permalink}}" target="_blank" class="hs_postTime">{{post_date}}</a>
@@ -170,36 +226,13 @@ if (isset($_GET['disconnect'])) {
         <!-- DROPDOWNS -->
         <div class="hs_dropdown">
 
-
-            <div class="hs_message">
-
-                <span class="hs_networkName">Sample Form Elements</span>
-
-                <p>
-                    Beow are some sample form elements for re-use anywhere in the stream.
-                </p>
-
-                <label class="hs_title">Input:<br><input type="text"></label>
-                <label class="hs_title">Textarea:<br><textarea style="width: 158px;"></textarea></label>
-                <label class="hs_title">Textarea with info below:</label><textarea style="width: 158px;"></textarea>
-
-                <p class="hs_subDesc">Description text or more information</p>
-                <label class="hs_title">Textarea with info above:</label>
-
-                <p class="hs_supDesc">Description text or more information</p><textarea
-                    style="width: 158px;"></textarea>
-
-                <div class="hs_btns">
-                    <a class="hs_btn-del" href="#">Cancel</a>&nbsp;<a class="hs_btn-cmt" href="#">Submit</a>
-                </div>
-
-            </div>
-
-
             <!-- WRITE MESSAGE -->
-            <div class="_writeMessage hs_btns-right">
-                <label class="hs_title">Type:<br>
-                    <select id="activity_type" name="activity[type]" class="valid">
+            <div class="_uploadActivity hs_btns-right">
+                <label class="hs_title">Name<br>
+                    <input id="activity_name" size="30" type="text" style="width:165px">
+                </label>
+                <label class="hs_title">Type<br>
+                    <select id="activity_type" name="activity[type]" class="valid" style="width:175px">
                         <option value="Run">Run</option>
                         <option value="Walk">Walk</option>
                         <option value="Hike">Hike</option>
@@ -218,9 +251,6 @@ if (isset($_GET['disconnect'])) {
                         <option value="Swim">Swim</option>
                     </select>
                 </label>
-                <label class="hs_title">Name:<br>
-                    <input id="activity_name" size="30" type="text">
-                </label>
 
                 <div class="hs_btns-right">
                     <a class="hs_btn-cmt" href="#">Send</a>
@@ -235,16 +265,13 @@ if (isset($_GET['disconnect'])) {
             <!-- SETTINGS -->
             <div class="_settings hs_btns-right">
                 <?php if ($_user['connected']): ?>
-                    <strong>Connected account:</strong> <?php echo $_user['connected_user_name'] ?>
+                    <strong>Connected user:</strong> <?php echo $_user['connected_user_name'] ?>
                     &nbsp;
                     <a href="<?php echo '?' . query_without_vars('connect') . '&disconnect'; ?>" class="hs_btn-cmt">Disconnect</a>
                 <?php else: ?>
                     <a href="<?php echo $_SERVER['REQUEST_URI'] . '&connect'; ?>" class="hs_btn-cmt btn-connect">Connect
                         your Strava account</a>
                 <?php endif ?>
-                <a href="#">Settings Link</a>
-                <label class="hs_title"><input type="checkbox"> Setting 1</label>
-                <a class="hs_btn-cmt" href="#">Save</a>
             </div>
 
             <!-- MENU LIST -->
@@ -258,104 +285,16 @@ if (isset($_GET['disconnect'])) {
 
         </div>
     </div>
+
     <div class="hs_topBarSpace"></div>
-    <!-- Spacer underneath "hs_topBar" to prevent clipping of content -->
 
-    <div class="hs_noMessage">
-        Space for a user message or other text
-    </div>
+    <div class="hs_noMessage" id="app-stream-heading" style="display:none;"></div>
 
-
-    <!-- ==================== -->
-    <!-- = MESSAGE TEMPLATE = -->
-    <!-- ==================== -->
-    <!--
-    NOTE: This template contains all possible elements at once.
-          Re-use only what you need and
-    ß
-          =============================
-          = read the in-line comments =
-          =============================
-
-    API documentation: https://sites.google.com/site/hootsuiteappdevelopers/jsapi
-
-     -->
-    <div class="hs_message">
-
-
-        <!-- MESSAGE CONTROLS -->
-
-        <div class="hs_controls">
-            <a href="#" class="hs_icon hs_reply" title="Share">Share</a>
-            <a href="#" class="hs_icon hs_directMessage" title="Direct Message">DM</a>
-        </div>
-
-
-        <!-- MESSAGE -->
-        <!--
-        Clicking on a username or avatar should open the user's bio via hsp.customUserInfo()
-        or hsp.showUser(twitterHandle) for Twitter users
-        -->
-        <a href="#" class="hs_networkAvatarLink"></a><img class="hs_networkAvatar" src="[AVATAR URL]"
-                                                          alt="[Username or Heading]">
-
-        <a href="#" class="hs_networkName">Username or Heading</a>
-
-        <!-- This should link out directly to the source message or story -->
-        <a href="[PERMALINK / SOURCE URL]" class="hs_postTime" target="_blank">Jan 01, 12:34am via [Platform or
-            Username]</a>
-
-        <div class="hs_messageContent">
-            Message Content...
-            <a href="#" class="demo_user_info">This link</a> opens a user info popup (when called from within the
-            dashboard).
-        </div>
-
-
-        <!-- ATTACHMENT -->
-
-        <div class="hs_postAttachment">
-
-            <!-- This should link out directly to the source page -->
-            <a class="hs_attachedLink " href="http://ow.ly/6Ou4N" target="_blank">
-                <!-- Thumb: max. 130x200px (gets scaled down automatically) -->
-                <img alt="Owly Graduate" src="owly-graduate-90x90.jpg">
-            </a>
-
-            <div class="hs_title">
-                <!-- This should link out directly to the source page -->
-                <a href="http://ow.ly/6Ou4N" target="_blank">HootSuite University, Social Media Certification</a>
-            </div>
-
-            <div class="hs_caption">ow.ly</div>
-            <!-- The link's domain name -->
-            <div class="hs_description">
-                The HootSuite University program is designed for professionals seeking to increase skills in HootSuite
-                and
-                other social media tools and tactics.
-            </div>
-
-        </div>
-
-    </div>
+    <div id="app-stream"></div>
 
 </div>
 <!-- .hs_stream -->
 
 
-<!-- ================== -->
-<!-- = LOAD MORE LINK = -->
-<!-- ================== -->
-<!--
-This should be triggered automatically when the scroll position nears the
-the bottom of the stream.
- -->
-<div id=""><!-- optional wrapper div -->
-    <a href="#" class="hs_messageMore">Show More</a>
-</div>
-
-
-<iframe name="hspframe" id="hspframe" style="width: 1px; height: 1px; display: none; position: absolute;"
-        src="http://hootsuite.com/dc_receiver.html#?action=init&amp;p1=&amp;p2=481755055398&amp;key=app-exchange-demo&amp;pid="></iframe>
 </body>
 </html>

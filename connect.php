@@ -9,8 +9,8 @@
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
-require_once('Authentication.php');
-require_once('StravaApiLib.php');
+require_once('src/Authentication.php');
+require_once('src/StravaApiLib.php');
 
 session_start();
 

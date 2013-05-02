@@ -53,10 +53,11 @@ function verify_connection($uid, $pid)
     global $_user;
     // user-stream specific id
     $user_stream = $uid . '-' . $pid;
+    $_user['user_stream'] = $user_stream;
     $account_data = db::get($user_stream);
-    if(is_array($account_data)) {
+    if (is_array($account_data)) {
         // append stream specific data to _user array
-        array_merge($_user, $account_data);
+        $_user = array_merge($_user, $account_data);
         // user is connected
         $_user['connected'] = true;
     }

@@ -6,31 +6,29 @@
  * Time: 3:26 PM
  * To change this template use File | Settings | File Templates.
  */
-require_once('StravaApiLib.php');
-require_once('Authentication.php');
+require_once('src/StravaApiLib.php');
+require_once('src/Authentication.php');
 
 /*
  * Some pre-processing
  */
 
-$_POST['offset'] = (int)$_POST['offset'];
-$_POST['limit'] = (int)$_POST['limit'];
-if (empty($_POST['limit'])) {
+if (!empty($_POST['offset']))
+    $_POST['offset'] = (int)$_POST['offset'];
+if (!empty($_POST['limit']))
+    $_POST['limit'] = (int)$_POST['limit'];
+else {
     $_POST['limit'] = 15;
 }
 
 $strava = new StravaApiLib();
-const BAD_TOKEN_ERR = 0;
 const BAD_TOKEN_MSG = 'Your Strava authentication token has expired. Please re-connect.';
-const OTHER_ERR = 1;
 const OTHER_MSG = 'An error has occured, please try again later.';
 $bad_token_resp = array(
-    'errno' => BAD_TOKEN,
-    'message' => BAD_TOKEN_MSG
+    'error' => BAD_TOKEN_MSG
 );
 $other_resp = array(
-    'errno' => OTHER_ERR,
-    'message' => OTHER_MSG
+    'error' => OTHER_MSG
 );
 
 function handle_strava_api_response($response)
@@ -75,9 +73,6 @@ verify_connection($_POST['hs_params']['uid'], $_POST['hs_params']['pid']);
  * Process request
  */
 
-// debug
-var_dump($_POST);
-
 switch ($_POST['action']) {
     case 'login':
         $response = $strava->login($_POST['user_email'], $_POST['user_password']);
@@ -86,7 +81,7 @@ switch ($_POST['action']) {
         $response = $strava->ridesIndex(null, $_POST['offset'], $_POST['athlete_name'], null, $_POST['start_date'], $_POST['end_date'], $_POST['start_id']);
         // limit if has result
         if (isset($response->result['rides'])) {
-            $response->result = array_slice($response->result['rides'], 0, $_POST['limit']);
+            $response->result['rides'] = array_slice($response->result['rides'], 0, $_POST['limit']);
         }
         break;
     case 'get_rides':
@@ -94,11 +89,23 @@ switch ($_POST['action']) {
         $response = $strava->ridesIndex($athlete_id, $_POST['offset']);
         // limit if has result
         if (isset($response->result['rides'])) {
-            $response->result = array_slice($response->result['rides'], 0, $_POST['limit']);
+            $response->result['rides'] = array_slice($response->result['rides'], 0, $_POST['limit']);
+            foreach ($response->result['rides'] as &$ride) {
+                $show_resp = $strava->showRide($ride['id']);
+                if (is_null($show_resp->error)) {
+                    $ride = array_merge($ride, $show_resp->result['ride']);
+                }
+                if (isset($ride['start_date_local'])) {
+                    $ride['ts'] = strtotime($ride['start_date_local']);
+                }
+            }
         }
         break;
     case 'show_ride':
         $response = $strava->showRide($_POST['ride_id']);
+        if (isset($response->result['ride']['start_date_local'])) {
+            $response->result['ride']['ts'] = strtotime($response->result['ride']['start_date_local']);
+        }
         break;
     case 'get_ride_route':
         $token = $_user['connected_user_token'];
