@@ -18,11 +18,11 @@ class ApiTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->strava = new StravaApiLib();
-        $this->user = new UserAuthentication();
+        $this->user = array();
         $response = $this->strava->login("edward.soo@hootsuite.com", "password");
         $result = $response->result;
-        $this->user->token = & $result['token'];
-        $this->user->athlete = & $result['athlete'];
+        $this->user['token'] = & $result['token'];
+        $this->user['athlete'] = & $result['athlete'];
 
         //echo "token = ".$result['token'].PHP_EOL;
     }
@@ -46,7 +46,7 @@ class ApiTest extends PHPUnit_Framework_TestCase
      */
     public function testRidesIndex()
     {
-        $response = $this->strava->ridesIndex($this->user->athlete['id']);
+        $response = $this->strava->ridesIndex($this->user['athlete']['id'], 10);
         $result = $response->result;
 
         // Token usable
@@ -63,12 +63,12 @@ class ApiTest extends PHPUnit_Framework_TestCase
     public function testGetMapDetails()
     {
         // Get list of rides
-        $response = $this->strava->ridesIndex($this->user->athlete['id']);
+        $response = $this->strava->ridesIndex($this->user['athlete']['id']);
         $result = $response->result;
 
         if (count($result['rides']) > 0) {
             $ride = $result['rides'][0];
-            $response = $this->strava->getMapDetails($this->user->token, $ride['id']);
+            $response = $this->strava->getMapDetails($this->user['token'], $ride['id']);
             $result = $response->result;
 
             if (isset($response->error) && $response->error['code'] == 400) {
@@ -89,7 +89,7 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
         $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
 
-        $response = $this->strava->createRide($this->user->token, $data, 'test ride');
+        $response = $this->strava->createRide($this->user['token'], $data, 'test ride');
         $result = $response->result;
 
         $this->assertNull($response->error);
@@ -108,9 +108,9 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
         $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
 
-        $response = $this->strava->createRide($this->user->token, $data, 'test ride');
+        $response = $this->strava->createRide($this->user['token'], $data, 'test ride');
         $uploadResult = $response->result;
-        $response = $this->strava->getUploadStatus($this->user->token, $uploadResult['upload_id']);
+        $response = $this->strava->getUploadStatus($this->user['token'], $uploadResult['upload_id']);
         $statusResult = $response->result;
         $this->assertArrayHasKey('id', $statusResult);
         $this->assertArrayHasKey('upload_status', $statusResult);
@@ -123,7 +123,7 @@ class ApiTest extends PHPUnit_Framework_TestCase
     public function testShowRide()
     {
         // Get list of rides
-        $response = $this->strava->ridesIndex($this->user->athlete['id']);
+        $response = $this->strava->ridesIndex($this->user['athlete']['id']);
         $result = $response->result;
 
         if (count($result['rides']) > 0) {

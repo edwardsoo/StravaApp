@@ -8,7 +8,6 @@
  */
 
 require_once "RestApiResponse.php";
-require_once "UserAuthentication.php";
 require_once "DataField.php";
 require_once "Activity.php";
 
@@ -40,12 +39,13 @@ class StravaApiLib
      * Gets up to 50 rides, searches by athlete, club or date.
      * All arguments are optional
      */
-    public function ridesIndex($athleteId = null, $athleteName = null, $clubId = null, $startDate = null, $endDate = null, $startId = null)
+    public function ridesIndex($athleteId = null, $offset = null, $athleteName = null, $clubId = null, $startDate = null, $endDate = null, $startId = null)
     {
         $url = self::V1_API . self::RIDES_URL;
 
         $args = array();
         if ($clubId) $args[] = "clubId=$clubId";
+        if ($offset) $args[] = "offset=$offset";
         if ($athleteId) $args[] = "athleteId=$athleteId";
         if ($athleteName) $args[] = "athleteName=$athleteName";
         if ($startDate) $args[] = "startDate=$startDate";
