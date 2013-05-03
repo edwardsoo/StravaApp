@@ -86,10 +86,11 @@ class ApiTest extends PHPUnit_Framework_TestCase
     {
         // Fake data
         $data = array();
+        $fields = array('time', 'latitude', 'longitude', 'elevation', 'h_accuracy', 'v_accuracy');
         $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
         $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
 
-        $response = $this->strava->createRide($this->user['token'], $data, 'test ride');
+        $response = $this->strava->createRide($this->user['token'], $fields, $data, 'test ride');
         $result = $response->result;
 
         $this->assertNull($response->error);
@@ -105,10 +106,11 @@ class ApiTest extends PHPUnit_Framework_TestCase
     {
         // Fake data
         $data = array();
+        $fields = array('time', 'latitude', 'longitude', 'elevation', 'h_accuracy', 'v_accuracy');
         $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
         $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
 
-        $response = $this->strava->createRide($this->user['token'], $data, 'test ride');
+        $response = $this->strava->createRide($this->user['token'], $fields, $data, 'test ride');
         $uploadResult = $response->result;
         $response = $this->strava->getUploadStatus($this->user['token'], $uploadResult['upload_id']);
         $statusResult = $response->result;
