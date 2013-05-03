@@ -360,7 +360,6 @@ create: function (name, type, date, time, duration, lat, lng) {
         $('.hs_topBar .hs_dropdown').hide();
         $('.hs_topBar .hs_controls a.active').removeClass('active');
         $('#create_activity_form').find('input, select').each(function(){
-            console.debug($(this));
             $(this).val('');
         });
         

@@ -58,6 +58,7 @@ if (!$_user['connected']) {
             height: 100%
         }
     </style>
+
     <?php if ($_SERVER['HTTPS'] == 'on'): ?>
         <script type="text/javascript" src="https://d2l6uygi1pgnys.cloudfront.net/jsapi/0-5/hsp.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
@@ -68,13 +69,26 @@ if (!$_user['connected']) {
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
     <?php endif; ?>
 
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
     <script type="text/javascript">
         function initialize() {
             var mapOptions = {
-                mapTypeId: google.maps.MapTypeId.ROADMAP
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                initialZoom: true
             };
             var map = new google.maps.Map(document.getElementById("map-canvas"),
                 mapOptions);
+
+            google.maps.event.addListener(map, 'zoom_changed', function() {
+               var boundsChangedListener = google.maps.event.addListener(map, 'bounds_changed', function(event) {
+                   if (this.getZoom() > 15) {
+                       this.setZoom(15);
+                   }
+                   google.maps.event.removeListener(boundsChangedListener);
+               });
+            });
+
             var params = {
                 action: 'get_ride_route',
                 hs_params: <?php
