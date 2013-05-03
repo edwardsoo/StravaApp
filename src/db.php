@@ -9,13 +9,13 @@
 
 // TODO: store user_stream data on a db
 class db {
-    function get($key) {
+    static function get($key) {
         return $_SESSION['simulated_db'][ $key ];
     }
-    function put($key, $val) {
+    static function put($key, $val) {
         $_SESSION['simulated_db'][ $key ] = $val;
     }
-    function delete($key) {
+    static function delete($key) {
         unset($_SESSION['simulated_db'][ $key ]);
     }
 }
