@@ -76,7 +76,7 @@ if (!empty($_POST['email']) && !empty($_POST['password'])) {
                     <div class="branding"><a href="/" class="strava-logo md"
                                              title="Return to the Strava home page">Strava</a></div>
                     <ul class="user-nav">
-                        <li class="logged_out_nav"><a href="/register">Sign Up</a></li>
+                        <li class="logged_out_nav"><a target="_blank" href="https://www.strava.com/register/free">Sign Up</a></li>
                     </ul>
                 </div>
             </nav>

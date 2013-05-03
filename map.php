@@ -71,15 +71,15 @@ if (!$_user['connected']) {
             var params = {
                 action: 'get_ride_route',
                 hs_params: <?php
-                   echo json_encode(array(
-                   'uid'   => $_GET['uid'],
-                   'pid'   => $_GET['pid'],
-                   'i'     => $_GET['i'],
-                   'ts'    => $_GET['ts'],
-                   'token' => $_GET['token'],
-                   'theme' => $_GET['theme'],
-                   ));
-                       ?>,
+            echo json_encode(array(
+             'uid'   => $_GET['uid'],
+             'pid'   => $_GET['pid'],
+             'i'     => $_GET['i'],
+             'ts'    => $_GET['ts'],
+             'token' => $_GET['token'],
+             'theme' => $_GET['theme'],
+             ));
+            ?>,
                 ride_id: <?php echo $_GET['ride_id']; ?>
             };
 
@@ -99,12 +99,13 @@ if (!$_user['connected']) {
                         map: map,
                         icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_letter&chld=s|00FF00|000000'
                     }));
-
-                    markers.push(new google.maps.Marker({
-                        position: coords[coords.length-1],
-                        map: map,
-                        icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_icon&chld=glyphish_flag|00CCFF'
-                    }));
+                    if (coords.length > 1) {
+                        markers.push(new google.maps.Marker({
+                            position: coords[coords.length - 1],
+                            map: map,
+                            icon: 'https://chart.googleapis.com/chart?chst=d_map_pin_icon&chld=glyphish_flag|00CCFF'
+                        }));
+                    }
                 }
                 var path = new google.maps.Polyline({
                     path: coords,

@@ -67,7 +67,7 @@ class StravaApiLib
      * $activityName - Optional, name of activity
      * $activityType - Optional, type of activity, all valid values are listed in class Activity
      */
-    public function createRide($token, $fields, $dataFieldArray, $activityName = null, $activityType = null)
+    public function createRide($token, $fields, $data, $activityName = null, $activityType = null)
     {
         $url = self::V2_API . self::UPLOAD_URL;
 
@@ -75,10 +75,6 @@ class StravaApiLib
         $args['token'] = $token;
         $args['type'] = "json";
         $args['data_fields'] = $fields;
-        $data = array();
-        foreach ($dataFieldArray as $dataField) {
-            $data[] = $dataField->getValueArray();
-        }
         $args['data'] = $data;
 
         if ($activityName) $args['activity_name'] = $activityName;

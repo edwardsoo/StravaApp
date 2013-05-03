@@ -132,7 +132,7 @@ if (isset($_GET['disconnect'])) {
                 connected_user_token: '<?php echo $_user['connected_user_token']?>',
                 <?php endif; ?>
                 hs_params: <?php
-                    echo json_encode(array(
+                echo json_encode(array(
                     'uid'   => $_GET['uid'],
                     'pid'   => $_GET['pid'],
                     'i'     => $_GET['i'],
@@ -151,7 +151,7 @@ if (isset($_GET['disconnect'])) {
 
             // Strava stream function handler
 
-            // "Search"
+            // Search
             var search = function () {
                 var start = $('#start_date').val();
                 var end = $('#end_date').val();
@@ -161,7 +161,7 @@ if (isset($_GET['disconnect'])) {
                     $('.hs_topBar .hs_controls a.active').removeClass('active');
                     $(window).scrollTop(0);
                 }
-            }
+            };
             $('.hs_topBar a.search').click(function (e) {
                 search();
             });
@@ -170,6 +170,40 @@ if (isset($_GET['disconnect'])) {
                     search();
                 }
             });
+
+
+            // Create Activity
+            var create = function () {
+                var name = $('#activity_name').val();
+                var type = $('#activity_type').val();
+                var date = $('#activity_date').val();
+                var time = $('#activity_time').val();
+                var duration = $('#activity_duration').val();
+                stravaStream.create(name, type, date, time, duration, lat, lng);
+
+            };
+            $('#create_activity_form').find('a.create').click(function (e) {
+                create();
+            });
+            $('#create_activity_form').find('#activity_name, #activity_type, #activity_date, #activity_time, #activity_duration, #activity_distance').keypress(function (e) {
+                if (e.keyCode == 13) { // enter button
+                    create();
+                }
+            });
+
+            var lat = 0;
+            var lng = 0;
+            var getLatLng = function (position) {
+                lat = position.coords.latitude;
+                lng = position.coords.longitude;
+            };
+            var getLocation = function () {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(getLatLng, function (err) {
+                    }, {timeout: 60000});
+                }
+            };
+            getLocation();
 
         })
     </script>
@@ -218,7 +252,7 @@ if (isset($_GET['disconnect'])) {
                     <a href="#" dropdown="_uploadActivity" title="Upload Activity"><span
                             class="icon-19 write"></span>
                     </a>
-                    <a href="#" dropdown="_search" title="Search Rides"><span
+                    <a href="#" dropdown="_search" title="Search"><span
                             class="icon-19 search"></span>
                     </a>
 
@@ -237,34 +271,46 @@ if (isset($_GET['disconnect'])) {
 
                 <!-- CREATE ACTIVITY -->
                 <div class="_uploadActivity hs_btns-right">
-                    <label class="hs_title">Name<br></label>
-                    <input id="activity_name" name="activity[name]" size="30" type="text" style="width:165px">
+                    <form id="create_activity_form">
+                        <label class="hs_title">Name<br></label>
+                        <input id="activity_name" name="activity[name]" size="30" type="text" style="width:165px"
+                               required>
 
-                    <label class="hs_title">Type<br></label>
-                    <select id="activity_type" name="activity[type]" class="valid" style="width:175px">
-                        <option value="Run">Run</option>
-                        <option value="Walk">Walk</option>
-                        <option value="Hike">Hike</option>
-                        <option value="Ride" selected="selected">Ride</option>
-                        <option value="NordicSki">Nordic Ski</option>
-                        <option value="AlpineSki">Alpine Ski</option>
-                        <option value="BackcountrySki">Backcountry Ski</option>
-                        <option value="IceSkate">Ice Skate</option>
-                        <option value="InlineSkate">Inline Skate</option>
-                        <option value="Kitesurf">Kitesurf Session</option>
-                        <option value="RollerSki">Roller Ski</option>
-                        <option value="Windsurf">Windsurf Session</option>
-                        <option value="Workout">Workout</option>
-                        <option value="Snowboard">Snowboard</option>
-                        <option value="Snowshoe">Snowshoe</option>
-                        <option value="Swim">Swim</option>
-                    </select>
+                        <label class="hs_title">Type<br></label>
+                        <select id="activity_type" name="activity[type]" class="valid" style="width:175px" required>
+                            <option value="Run">Run</option>
+                            <option value="Walk">Walk</option>
+                            <option value="Hike">Hike</option>
+                            <option value="Ride" selected="selected">Ride</option>
+                            <option value="NordicSki">Nordic Ski</option>
+                            <option value="AlpineSki">Alpine Ski</option>
+                            <option value="BackcountrySki">Backcountry Ski</option>
+                            <option value="IceSkate">Ice Skate</option>
+                            <option value="InlineSkate">Inline Skate</option>
+                            <option value="Kitesurf">Kitesurf Session</option>
+                            <option value="RollerSki">Roller Ski</option>
+                            <option value="Windsurf">Windsurf Session</option>
+                            <option value="Workout">Workout</option>
+                            <option value="Snowboard">Snowboard</option>
+                            <option value="Snowshoe">Snowshoe</option>
+                            <option value="Swim">Swim</option>
+                        </select>
 
-                    <br><br>
+                        <label class="hs_title">Date<br></label>
+                        <input type="date" id="activity_date" name="activity[date]" required>
 
-                    <div class="hs_btns-right">
-                        <a class="hs_btn-cmt" href="#">Create</a>
-                    </div>
+                        <label class="hs_title">Start Time<br></label>
+                        <input type="time" id="activity_time" name="activity[time]" required>
+
+                        <label class="hs_title">Duration (minutes)<br></label>
+                        <input type="number" id="activity_duration" name="activity[duration]" required min="0">
+
+                        <br><br>
+
+                        <div class="hs_btns-right">
+                            <a class="hs_btn-cmt create">Create</a>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- SEARCH -->
