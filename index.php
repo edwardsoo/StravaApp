@@ -71,12 +71,12 @@ if (isset($_GET['disconnect'])) {
         ?>
         <script type="text/javascript" src="https://d2l6uygi1pgnys.cloudfront.net/jsapi/0-5/hsp.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
-    <?php
+        <?php
     }else {
-    ?>
+        ?>
         <script type="text/javascript" src="http://static.hootsuite.com/jsapi/0-5/hsp.js"></script>
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
-    <?php
+        <?php
     }
     // Load CSS
     $theme = $_GET['theme'];
@@ -86,43 +86,43 @@ if (isset($_GET['disconnect'])) {
     ?>
     <link rel='stylesheet' href='css/<?php echo $theme; ?>.css' type="text/css" media="screen"/>
     <style type="text/css">
-        li {
-            display: inline;
-            list-style-type: none;
-        }
+    li {
+        display: inline;
+        list-style-type: none;
+    }
     </style>
     <script type="text/javascript" src="js/stream-controls.js"></script>
     <script type="text/javascript" src="js/script.js"></script>
     <script type="text/javascript">
-        $(document).ready(function () {
-            <?php
-            $protocol = ($_SERVER['HTTPS'] == 'on')? 'https://' : 'http://';
-            $receiver_path = $protocol.$_SERVER['HTTP_HOST'].'/app_receiver.html';
-            ?>
-            var hsp_params = {
-                apiKey: 'bppghhj1h008gg8wwg808g80g3ia90a2l6i',
-                useTheme: true
-            };
+    $(document).ready(function () {
+        <?php
+        $protocol = ($_SERVER['HTTPS'] == 'on')? 'https://' : 'http://';
+        $receiver_path = $protocol.$_SERVER['HTTP_HOST'].'/app_receiver.html';
+        ?>
+        var hsp_params = {
+            apiKey: 'bppghhj1h008gg8wwg808g80g3ia90a2l6i',
+            useTheme: true
+        };
 
-            hsp_params.receiverPath = '<?php echo $receiver_path ?>';
-            hsp_params.subtitle = '<?php echo ($_user['connected']? $_user['connected_user_name'] : '') ?>';
-            hsp.init(hsp_params);
+        hsp_params.receiverPath = '<?php echo $receiver_path ?>';
+        hsp_params.subtitle = '<?php echo ($_user['connected']? $_user['connected_user_name'] : '') ?>';
+        hsp.init(hsp_params);
 
-            hsp.bind('closepopup', function () {
-            });
-            hsp.bind('dropuser', function () {
-            });
-            hsp.bind('refresh', function () {
-                stravaStream.refresh_stream();
-            });
-            hsp.bind('senttoapp', function () {
-            });
-            hsp.bind('sendcomposedmsgtoapp', function () {
-            });
-            hsp.bind('sendprofiletoapp', function () {
-            });
-            hsp.bind('sendassignmentupdates', function () {
-            });
+        hsp.bind('closepopup', function () {
+        });
+        hsp.bind('dropuser', function () {
+        });
+        hsp.bind('refresh', function () {
+            stravaStream.refresh_stream();
+        });
+        hsp.bind('senttoapp', function () {
+        });
+        hsp.bind('sendcomposedmsgtoapp', function () {
+        });
+        hsp.bind('sendprofiletoapp', function () {
+        });
+        hsp.bind('sendassignmentupdates', function () {
+        });
 
             // Strava app JS
             stravaStream.init($('#app-stream'), {
@@ -132,7 +132,7 @@ if (isset($_GET['disconnect'])) {
                 connected_user_token: '<?php echo $_user['connected_user_token']?>',
                 <?php endif; ?>
                 hs_params: <?php
-                    echo json_encode(array(
+                echo json_encode(array(
                     'uid'   => $_GET['uid'],
                     'pid'   => $_GET['pid'],
                     'i'     => $_GET['i'],
@@ -151,7 +151,7 @@ if (isset($_GET['disconnect'])) {
 
             // Strava stream function handler
 
-            // "Search"
+            // Search
             var search = function () {
                 var start = $('#start_date').val();
                 var end = $('#end_date').val();
@@ -161,7 +161,7 @@ if (isset($_GET['disconnect'])) {
                     $('.hs_topBar .hs_controls a.active').removeClass('active');
                     $(window).scrollTop(0);
                 }
-            }
+            };
             $('.hs_topBar a.search').click(function (e) {
                 search();
             });
@@ -171,59 +171,93 @@ if (isset($_GET['disconnect'])) {
                 }
             });
 
-        })
-    </script>
 
-    <script id="activity_template" type="text/template">
-        <div class="hs_message" data-item-id="{{id}}" data-value="{{distance}}">
-            <div class="hs_controls">
-                <a href="#" class="hs_icon hs_reply" title="Share">Share</a>
-                <a href="#" class="hs_icon hs_expand" title="More">more...</a>
-            </div>
-            <a href="{{permalink}}" target="_blank" class="hs_networkName">{{name}}</a>
-            <a href="#" class="hs_postTime">{{date}}</a>
+            // Create Activity
+            var create = function () {
+                var name = $('#activity_name').val();
+                var type = $('#activity_type').val();
+                var date = $('#activity_date').val();
+                var time = $('#activity_time').val();
+                var duration = $('#activity_duration').val();
+                stravaStream.create(name, type, date, time, duration, lat, lng);
 
-            <div class="hs_messageContent">
-                <ul>
-                    <li class="hs_tooltip" title="Distance">{{distance}}km&nbsp;&nbsp;</li>
-                    <li class="hs_tooltip" title="Average Pace">{{avg_speed}}km/h&nbsp;&nbsp;</li>
-                    <li class="hs_tooltip" title="Moving Time">{{moving_time}}&nbsp;&nbsp;</li>
-                    <li class="hs_tooltip" title="Elevation Gain">{{elevation_gain}}m&nbsp;&nbsp;</li>
-                </ul>
+            };
+            $('#create_activity_form').find('a.create').click(function (e) {
+                create();
+            });
+            $('#create_activity_form').find('#activity_name, #activity_type, #activity_date, #activity_time, #activity_duration, #activity_distance').keypress(function (e) {
+                if (e.keyCode == 13) { // enter button
+                    create();
+                }
+            });
 
-            </div>
+            var lat = 0;
+            var lng = 0;
+            var getLatLng = function(position) {
+                lat = position.coords.latitude;
+                lng = position.coords.longitude;
+            };
+            var getLocation = function () {
+                if(navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(getLatLng,function(err) {
+                  },{timeout:60000});
+              }
+          };
+          getLocation();
 
-        </div>
-    </script>
+      })
+</script>
 
-    <script type="text/css" media="screen">
-    </script>
+<script id="activity_template" type="text/template">
+<div class="hs_message" data-item-id="{{id}}" data-value="{{distance}}">
+<div class="hs_controls">
+<a href="#" class="hs_icon hs_reply" title="Share">Share</a>
+<a href="#" class="hs_icon hs_expand" title="More">more...</a>
+</div>
+<a href="{{permalink}}" target="_blank" class="hs_networkName">{{name}}</a>
+<a href="#" class="hs_postTime">{{date}}</a>
+
+<div class="hs_messageContent">
+<ul>
+<li class="hs_tooltip" title="Distance">{{distance}}km&nbsp;&nbsp;</li>
+<li class="hs_tooltip" title="Average Pace">{{avg_speed}}km/h&nbsp;&nbsp;</li>
+<li class="hs_tooltip" title="Moving Time">{{moving_time}}&nbsp;&nbsp;</li>
+<li class="hs_tooltip" title="Elevation Gain">{{elevation_gain}}m&nbsp;&nbsp;</li>
+</ul>
+
+</div>
+
+</div>
+</script>
+
+<script type="text/css" media="screen">
+</script>
 
 </head>
 <body>
 
 
-<!-- Stream -->
-<div class="hs_stream">
+    <!-- Stream -->
+    <div class="hs_stream">
 
 
-    <!-- Top Bar -->
-    <div class="hs_topBar">
+        <!-- Top Bar -->
+        <div class="hs_topBar">
 
-        <?php if ($_user['connected']): ?>
+            <?php if ($_user['connected']): ?>
 
             <div class="hs_content">
                 <!-- ICONS -->
                 <div class="hs_controls">
                     <a href="#" dropdown="_uploadActivity" title="Upload Activity"><span
-                            class="icon-19 write"></span>
+                        class="icon-19 write"></span>
                     </a>
                     <a href="#" dropdown="_search" title="Search"><span
-                            class="icon-19 search"></span>
+                        class="icon-19 search"></span>
                     </a>
 
                     <a href="#" dropdown="_settings" title="Settings"><span
-                            class="icon-19 settings"></span>
+                        class="icon-19 settings"></span>
                     </a>
                 </div>
 
@@ -237,34 +271,45 @@ if (isset($_GET['disconnect'])) {
 
                 <!-- CREATE ACTIVITY -->
                 <div class="_uploadActivity hs_btns-right">
-                    <label class="hs_title">Name<br></label>
-                    <input id="activity_name" name="activity[name]" size="30" type="text" style="width:165px">
+                    <form id="create_activity_form">
+                        <label class="hs_title">Name<br></label>
+                        <input id="activity_name" name="activity[name]" size="30" type="text" style="width:165px" required>
 
-                    <label class="hs_title">Type<br></label>
-                    <select id="activity_type" name="activity[type]" class="valid" style="width:175px">
-                        <option value="Run">Run</option>
-                        <option value="Walk">Walk</option>
-                        <option value="Hike">Hike</option>
-                        <option value="Ride" selected="selected">Ride</option>
-                        <option value="NordicSki">Nordic Ski</option>
-                        <option value="AlpineSki">Alpine Ski</option>
-                        <option value="BackcountrySki">Backcountry Ski</option>
-                        <option value="IceSkate">Ice Skate</option>
-                        <option value="InlineSkate">Inline Skate</option>
-                        <option value="Kitesurf">Kitesurf Session</option>
-                        <option value="RollerSki">Roller Ski</option>
-                        <option value="Windsurf">Windsurf Session</option>
-                        <option value="Workout">Workout</option>
-                        <option value="Snowboard">Snowboard</option>
-                        <option value="Snowshoe">Snowshoe</option>
-                        <option value="Swim">Swim</option>
-                    </select>
+                        <label class="hs_title">Type<br></label>
+                        <select id="activity_type" name="activity[type]" class="valid" style="width:175px" required>
+                            <option value="Run">Run</option>
+                            <option value="Walk">Walk</option>
+                            <option value="Hike">Hike</option>
+                            <option value="Ride" selected="selected">Ride</option>
+                            <option value="NordicSki">Nordic Ski</option>
+                            <option value="AlpineSki">Alpine Ski</option>
+                            <option value="BackcountrySki">Backcountry Ski</option>
+                            <option value="IceSkate">Ice Skate</option>
+                            <option value="InlineSkate">Inline Skate</option>
+                            <option value="Kitesurf">Kitesurf Session</option>
+                            <option value="RollerSki">Roller Ski</option>
+                            <option value="Windsurf">Windsurf Session</option>
+                            <option value="Workout">Workout</option>
+                            <option value="Snowboard">Snowboard</option>
+                            <option value="Snowshoe">Snowshoe</option>
+                            <option value="Swim">Swim</option>
+                        </select>
 
-                    <br><br>
+                        <label class="hs_title">Date<br></label>
+                        <input type="date" id="activity_date" name="activity[date]" required>
 
-                    <div class="hs_btns-right">
-                        <a class="hs_btn-cmt" href="#">Create</a>
-                    </div>
+                        <label class="hs_title">Start Time<br></label>
+                        <input type="time" id="activity_time" name="activity[time]" required>
+
+                        <label class="hs_title">Duration (minutes)<br></label>
+                        <input type="number" id="activity_duration" name="activity[duration]" required min="0">
+
+                        <br><br>
+
+                        <div class="hs_btns-right">
+                            <a class="hs_btn-cmt create">Create</a>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- SEARCH -->
@@ -288,20 +333,20 @@ if (isset($_GET['disconnect'])) {
                 </div>
             </div>
         <?php else: ?>
-            <div class="hs_content">
-                <?php if (!$_user['connected']): ?>
-                    <a href="<?php echo $_SERVER['REQUEST_URI'] . '&connect'; ?>" class="hs_btn-cmt btn-connect">Connect
-                        your Strava account</a>
-                <?php endif ?>
-            </div>
-        <?php endif; ?>
-    </div>
+        <div class="hs_content">
+            <?php if (!$_user['connected']): ?>
+            <a href="<?php echo $_SERVER['REQUEST_URI'] . '&connect'; ?>" class="hs_btn-cmt btn-connect">Connect
+                your Strava account</a>
+            <?php endif ?>
+        </div>
+    <?php endif; ?>
+</div>
 
-    <div class="hs_topBarSpace"></div>
+<div class="hs_topBarSpace"></div>
 
-    <div class="hs_noMessage" id="app-stream-heading" style="display:none;"></div>
+<div class="hs_noMessage" id="app-stream-heading" style="display:none;"></div>
 
-    <div id="app-stream"></div>
+<div id="app-stream"></div>
 
 </div>
 <!-- .hs_stream -->

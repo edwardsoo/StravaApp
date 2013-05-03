@@ -139,7 +139,10 @@ switch ($_POST['action']) {
     break;
     case 'create_ride':
     $token = $_user['connected_user_token'];
-    $response = $strava->createRide($token, null, $_POST['activity_name'], $_POST['activity_type']);
+    $data = array();
+    $data[] = array(date(DATE_ATOM, $_POST['activity_start']),0,0);
+    $data[] = array(date(DATE_ATOM, $_POST['activity_end']),0,0);
+    $response = $strava->createRide($token, $_POST['activity_fields'], $data, $_POST['activity_name'], $_POST['activity_type']);
     handle_strava_api_response($response);
     break;
     default:

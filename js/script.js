@@ -69,7 +69,6 @@
                     self.getMapDetails(activity_id);
                     event.preventDefault();
                 });
-                ;
 
             // Cancel/Clear links
             $('a.refresh_stream').live('click', function (event) {
@@ -299,20 +298,71 @@ getMapDetails: function (ride_id) {
 
     self.xhr = $.post('ajax.php', params, function (data) {
         var ride = data;
-        console.debug(data);
         var hs_params = self.options.hs_params;
 
         if (data.error != undefined && data.error.length) {
             hsp.showStatusMessage(data.error, (data.errno == 2)?'warning':'error');
             return;
-        } else {
-            var qdata = new Array();
-            for (prop in hs_params) {
-                qdata.push(prop + '=' + hs_params[prop]);
-            }
-            qdata.push('ride_id='+ride_id);
-            hsp.showCustomPopup('http://' + location.host + '/map.php?' + qdata.join('&'), ride.name, 600, 380)
+        } 
+        var qdata = new Array();
+        for (prop in hs_params) {
+            qdata.push(prop + '=' + hs_params[prop]);
         }
+        qdata.push('ride_id='+ride_id);
+        hsp.showCustomPopup('http://' + location.host + '/map.php?' + qdata.join('&'), ride.name, 600, 380)
+        
+    });
+},
+
+create: function (name, type, date, time, duration, lat, lng) {
+    var self = this;
+
+    this.last_api_call = 'create';
+
+    if (!this.options.connected) {
+        self.showError("Please connect to your Strava account to see your rides.");
+        return;
+    }
+
+    if (!name || !type || !date || !time || !duration) {
+        hsp.showStatusMessage('Please fill in all fields.', 'error');
+        return;
+    }
+    var dparts = date.split("-");
+    var tparts = time.split(":");
+    var d = new Date()
+    var n = d.getTimezoneOffset();
+    var start_time = new Date(dparts[0], dparts[1]-1, dparts[2], tparts[0], tparts[1]);
+    var start_ts = start_time.getTime()/1000;
+    var end_ts = start_ts + duration*60;
+
+
+    var params = {
+        action: 'create_ride',
+        hs_params: this.options.hs_params,
+        activity_name: name,
+        activity_type: type,
+        activity_fields: ["time", "latitude", "longitude"],
+        activity_start: start_ts,
+        activity_end: end_ts,
+        activity_lat: lat,
+        activity_lng: lng
+    };
+
+    self.xhr = $.post('ajax.php', params, function (data) {
+
+        if (data.error != undefined && data.error.length) {
+            hsp.showStatusMessage(data.error, 'error');
+            return;
+        }
+        hsp.showStatusMessage('Activity created.', 'success');
+
+        $('.hs_topBar .hs_dropdown').hide();
+        $('.hs_topBar .hs_controls a.active').removeClass('active');
+        $('#create_activity_form').find('input, select').each(function(){
+            $(this).value('');
+        });
+        
     });
 },
 

@@ -107,8 +107,8 @@ class ApiTest extends PHPUnit_Framework_TestCase
         // Fake data
         $data = array();
         $fields = array('time', 'latitude', 'longitude', 'elevation', 'h_accuracy', 'v_accuracy');
-        $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
-        $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10);
+        $data[] = new DataField(date(DATE_ATOM, mktime(0, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10).getValueArray();
+        $data[] = new DataField(date(DATE_ATOM, mktime(1, 0, 0, 4, 30, 2013)), 49.26382, -123.10432, 109, 10, 10).getValueArray();
 
         $response = $this->strava->createRide($this->user['token'], $fields, $data, 'test ride');
         $uploadResult = $response->result;
