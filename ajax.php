@@ -35,6 +35,7 @@ function handle_strava_api_response($response)
 {
     global $bad_token_resp;
     global $other_resp;
+    header('Content-type: application/json');
     if (is_null($response->error)) {
         echo json_encode($response->result);
     } else if ($response->authFailed) {
@@ -86,7 +87,7 @@ switch ($_POST['action']) {
         break;
     case 'get_rides':
         $athlete_id = $_user['connected_user_id'];
-        $response = $strava->ridesIndex($athlete_id, $_POST['offset']);
+        $response = $strava->ridesIndex($athlete_id, $_POST['offset'], null, null, $_POST['start_date'], $_POST['end_Date']);
         // limit if has result
         if (isset($response->result['rides'])) {
             $response->result['rides'] = array_slice($response->result['rides'], 0, $_POST['limit']);

@@ -40,10 +40,11 @@ $(document).ready(function () {
     });
 
     $('.hs_topBar .hs_controls a').hs_tipTip({defaultPosition: 'left', zindex: 101, position: 'fixed', where: 'topbar'});
+    $('.hs_tooltip, .hs_message .hs_controls a.hs_icon').hs_tipTip();
     $('.hs_stream').bind(
         "DOMNodeInserted",
-        function(e) {
-            $( e.target ).find('.hs_tooltip').hs_tipTip({defaultPosition:"bottom"});
+        function (e) {
+            $(e.target).find('.hs_tooltip, .hs_message .hs_controls a.hs_icon').hs_tipTip({defaultPosition: "bottom"});
         }
     );
 

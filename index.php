@@ -52,7 +52,7 @@ verify_connection($_GET['uid'], $_GET['pid']);
 
 // disconnect requested
 if (isset($_GET['disconnect'])) {
-    unset($_SESSION[$user_stream]);
+    db::delete($_GET['uid'] . '-' . $_GET['pid']);
     // redirect to self without the 'disconnect' parameter
     unset($_GET['disconnect']);
     header('Location: ?' . implode('&', $_GET));
@@ -134,11 +134,11 @@ if (isset($_GET['disconnect'])) {
                 hs_params: <?php
                     echo json_encode(array(
                     'uid'   => $_GET['uid'],
-                                        'pid'   => $_GET['pid'],
-                                        'i'     => $_GET['i'],
-                                        'ts'    => $_GET['ts'],
-                                        'token' => $_GET['token'],
-                                        'theme' => $_GET['theme'],
+                    'pid'   => $_GET['pid'],
+                    'i'     => $_GET['i'],
+                    'ts'    => $_GET['ts'],
+                    'token' => $_GET['token'],
+                    'theme' => $_GET['theme'],
                     ));
                 ?>,
                 template: $('#activity_template').html()
@@ -149,15 +149,36 @@ if (isset($_GET['disconnect'])) {
                 e.preventDefault();
             });
 
+            // Strava stream function handler
+
+            // "Search"
+            var search = function () {
+                var start = $('#start_date').val();
+                var end = $('#end_date').val();
+                if (start.length || end.length) {
+                    stravaStream.search(start, end);
+                    $('.hs_topBar .hs_dropdown').hide();
+                    $('.hs_topBar .hs_controls a.active').removeClass('active');
+                    $(window).scrollTop(0);
+                }
+            }
+            $('.hs_topBar a.search').click(function (e) {
+                search();
+            });
+            $('#start_date, #end_date').keypress(function (e) {
+                if (e.keyCode == 13) { // enter button
+                    search();
+                }
+            });
+
         })
     </script>
 
     <script id="activity_template" type="text/template">
-        <div class="hs_message" data-item-id="{{id}}">
+        <div class="hs_message" data-item-id="{{id}}" data-value="{{distance}}">
             <div class="hs_controls">
                 <a href="#" class="hs_icon hs_reply" title="Share">Share</a>
-                <a href="#" class="hs_icon hs_directMessage" title="Direct Message">DM</a>
-                <a href="#" class="hs_icon hs_expand">more...</a>
+                <a href="#" class="hs_icon hs_expand" title="More">more...</a>
             </div>
             <a href="{{permalink}}" target="_blank" class="hs_networkName">{{name}}</a>
             <a href="#" class="hs_postTime">{{date}}</a>
@@ -175,20 +196,6 @@ if (isset($_GET['disconnect'])) {
         </div>
     </script>
 
-    <script id="activity_details_template" type="text/template">
-        <div class="hs_message" data-username="{{username}}">
-            <div class="hs_controls">
-                <a href="#" class="hs_icon hs_reply" title="Reply">Reply</a>
-                <a href="#" class="hs_icon hs_directMessage" title="Direct Message">DM</a>
-                <a href="#" class="hs_icon hs_expand">more...</a>
-            </div>
-            <a href="#" class="hs_networkName">{{username}}</a>
-            <a href="{{permalink}}" target="_blank" class="hs_postTime">{{post_date}}</a>
-
-            <div class="hs_messageContent">{{message_text}}</div>
-        </div>
-    </script>
-
     <script type="text/css" media="screen">
     </script>
 
@@ -202,36 +209,38 @@ if (isset($_GET['disconnect'])) {
 
     <!-- Top Bar -->
     <div class="hs_topBar">
-        <div class="hs_content">
-            <!-- ICONS -->
-            <div class="hs_controls">
-                <a href="#" dropdown="_uploadActivity" title="Upload Activity"><span
-                        class="icon-19 write"></span>
-                </a>
-                <a href="#" dropdown="_search" title="Search"><span
-                        class="icon-19 search"></span>
-                </a>
-                <a href="#" dropdown="_settings" title="Settings"><span
-                        class="icon-19 settings"></span>
-                </a>
-                <a href="#" dropdown="_menuList" title="More"><span
-                        class="icon-19 dropdown"></span>
-                </a>
+
+        <?php if ($_user['connected']): ?>
+
+            <div class="hs_content">
+                <!-- ICONS -->
+                <div class="hs_controls">
+                    <a href="#" dropdown="_uploadActivity" title="Upload Activity"><span
+                            class="icon-19 write"></span>
+                    </a>
+                    <a href="#" dropdown="_search" title="Search"><span
+                            class="icon-19 search"></span>
+                    </a>
+
+                    <a href="#" dropdown="_settings" title="Settings"><span
+                            class="icon-19 settings"></span>
+                    </a>
+                </div>
+
+                <!-- CUSTOM CONTENT -->
+
             </div>
 
-            <!-- CUSTOM CONTENT -->
 
-        </div>
+            <!-- DROPDOWNS -->
+            <div class="hs_dropdown">
 
-        <!-- DROPDOWNS -->
-        <div class="hs_dropdown">
+                <!-- CREATE ACTIVITY -->
+                <div class="_uploadActivity hs_btns-right">
+                    <label class="hs_title">Name<br></label>
+                    <input id="activity_name" name="activity[name]" size="30" type="text" style="width:165px">
 
-            <!-- WRITE MESSAGE -->
-            <div class="_uploadActivity hs_btns-right">
-                <label class="hs_title">Name<br>
-                    <input id="activity_name" size="30" type="text" style="width:165px">
-                </label>
-                <label class="hs_title">Type<br>
+                    <label class="hs_title">Type<br></label>
                     <select id="activity_type" name="activity[type]" class="valid" style="width:175px">
                         <option value="Run">Run</option>
                         <option value="Walk">Walk</option>
@@ -250,40 +259,42 @@ if (isset($_GET['disconnect'])) {
                         <option value="Snowshoe">Snowshoe</option>
                         <option value="Swim">Swim</option>
                     </select>
-                </label>
 
-                <div class="hs_btns-right">
-                    <a class="hs_btn-cmt" href="#">Send</a>
+                    <br><br>
+
+                    <div class="hs_btns-right">
+                        <a class="hs_btn-cmt" href="#">Create</a>
+                    </div>
                 </div>
-            </div>
 
-            <!-- SEARCH -->
-            <div class="_search hs_btns-right">
-                <input type="text">&nbsp;<a class="hs_btn-cmt">Search</a>
-            </div>
+                <!-- SEARCH -->
+                <div class="_search hs_btns-right">
+                    <label class="hs_title">Start Date<br></label>
+                    <input type="date" id="start_date" name="start_date" style="width:165px">
 
-            <!-- SETTINGS -->
-            <div class="_settings hs_btns-right">
-                <?php if ($_user['connected']): ?>
+
+                    <label class="hs_title">End Date<br></label>
+                    <input type="date" id="end_date" name="end_date" style="width:165px">
+
+                    <br><br>
+                    <a class="hs_btn-cmt search">Search</a>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="_settings hs_btns-right">
                     <strong>Connected user:</strong> <?php echo $_user['connected_user_name'] ?>
                     &nbsp;
                     <a href="<?php echo '?' . query_without_vars('connect') . '&disconnect'; ?>" class="hs_btn-cmt">Disconnect</a>
-                <?php else: ?>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="hs_content">
+                <?php if (!$_user['connected']): ?>
                     <a href="<?php echo $_SERVER['REQUEST_URI'] . '&connect'; ?>" class="hs_btn-cmt btn-connect">Connect
                         your Strava account</a>
                 <?php endif ?>
             </div>
-
-            <!-- MENU LIST -->
-            <div class="_menuList hs_btns-right">
-                <a href="#">dropdown link 1</a>
-                <hr>
-                <a href="#">dropdown link 2</a>
-                <hr>
-                <a href="#">dropdown link 3</a>
-            </div>
-
-        </div>
+        <?php endif; ?>
     </div>
 
     <div class="hs_topBarSpace"></div>

@@ -7,176 +7,337 @@
  */
 
 var stravaStream = {
-    xhr: null,
-    las_api_call: '',
-    elem: null,
+        xhr: null,
+        las_api_call: '',
+        elem: null,
 
-    options: {
-        limit: 10, // # of activities per "page"
-        storiesLoadingHTML: '<div class="hs_noMessage">{{throbber}}</div>',
-        showMoreHTML: '<div class="hs_message-more" id="show_more" data-loading_more="false"><a href="#" class="hs_messageMore">Show More</a></div>',
+        options: {
+            limit: 10, // # of activities per "page"
+            storiesLoadingHTML: '<div class="hs_noMessage">{{throbber}}</div>',
+            showMoreHTML: '<div class="hs_message-more" id="show_more" data-loading_more="false"><a href="#" class="hs_messageMore">Show More</a></div>',
 
-        // jquery-dateFormat plugin
-        //
-        // yyyy = year
-        // MM = month
-        // MMM = month abbreviation (Jan, Feb … Dec)
-        // MMMM = long month (January, February … December)
-        // ddd = day of the week in words (Monday, Tuesday … Sunday)
-        // dd = day
-        // hh = hour in am/pm (1-12)
-        // HH = hour in day (0-23)
-        // mm = minute
-        // ss = second
-        // a = am/pm marker
-        // SSS = milliseconds
-        //
-        dateFormat: 'ddd, MMMM dd, yyyy', // Wednesday, May 1, 2013
-        dateFormatWithTime: 'hh:mma on ddd, MM/dd/yyyy' // 12:00am on Wednesday, 05/01/2013
-    },
+            // jquery-dateFormat plugin
+            //
+            // yyyy = year
+            // MM = month
+            // MMM = month abbreviation (Jan, Feb … Dec)
+            // MMMM = long month (January, February … December)
+            // ddd = day of the week in words (Monday, Tuesday … Sunday)
+            // dd = day
+            // hh = hour in am/pm (1-12)
+            // HH = hour in day (0-23)
+            // mm = minute
+            // ss = second
+            // a = am/pm marker
+            // SSS = milliseconds
+            //
+            dateFormat: 'ddd, MMMM dd, yyyy', // Wednesday, May 1, 2013
+            dateFormatWithTime: 'hh:mma on ddd, MM/dd/yyyy' // 12:00am on Wednesday, 05/01/2013
+        },
 
-    init: function (elem, options) {
-        var self = this;
-        if (elem === undefined || !elem.length) {
-            return false;
-        }
-        this.elem = elem;
-        this.options = $.extend({}, this.options, options);
-
-        // themed throbber
-        this.options.throbber = '<img src="http://s0.static.hootsuite.com/2-7-15/images/themes/' + this.options.hs_params.theme + '/loader.gif" alt="Loading..." class="throbber" style="vertical-align:middle;" />'; // margin-bottom:3px;
-        this.options.storiesLoadingHTML = this.options.storiesLoadingHTML.replace(/\{\{throbber\}\}/g, this.options.throbber);
-
-        this.elem.delegate('#show_more a.hs_messageMore', 'click', function (event) {
-            // "show more" link
-            // this is a fall-back if the automatic scroll-based load doesn't trigger
-
-            if ($('#show_more').data('loading_more') === false) {
-                $('#show_more').data('loading_more', true);
-                $('#show_more').addClass('hs_noMessage');
-                $('#show_more').html(self.options.throbber);
-                self.show_default_stream(self.elem.children('.hs_message').length); // = offset
+        init: function (elem, options) {
+            var self = this;
+            if (elem === undefined || !elem.length) {
+                return false;
             }
-            event.preventDefault();
-        });
+            this.elem = elem;
+            this.options = $.extend({}, this.options, options);
 
-        // load messages
-        this.show_default_stream();
-    },
+            // themed throbber
+            this.options.throbber = '<img src="http://s0.static.hootsuite.com/2-7-15/images/themes/' + this.options.hs_params.theme + '/loader.gif" alt="Loading..." class="throbber" style="vertical-align:middle;" />'; // margin-bottom:3px;
+            this.options.storiesLoadingHTML = this.options.storiesLoadingHTML.replace(/\{\{throbber\}\}/g, this.options.throbber);
 
-    refresh_stream: function (force) {
-        if (!force) {
-            // TODO: check for incomplete form
-            if (false) {
+            this.elem.
+                delegate('#show_more a.hs_messageMore', 'click',function (event) {
+                    // "show more" link
+                    // this is a fall-back if the automatic scroll-based load doesn't trigger
 
+                    if ($('#show_more').data('loading_more') === false) {
+                        $('#show_more').data('loading_more', true);
+                        $('#show_more').addClass('hs_noMessage');
+                        $('#show_more').html(self.options.throbber);
+                        self.show_default_stream(self.elem.children('.hs_message').length); // = offset
+                    }
+                    event.preventDefault();
+                }).delegate('.hs_message .hs_controls a.hs_reply', 'click',function (event) {
+                    var activity_id = $(this).closest('.hs_message').data('item-id');
+                    var distance = $(this).closest('.hs_message').data('value');
+                    hsp.composeMessage('went for a ' + distance + ' kilometer ride. http://app.strava.com/activities/' + activity_id + ' #strava');
+                    event.preventDefault();
+                }).delegate('.hs_message .hs_controls a.hs_expand', 'click', function (event) {
+                    var activity_id = $(this).closest('.hs_message').data('item-id');
+                    self.getMapDetails(activity_id);
+                    event.preventDefault();
+                });
+            ;
+
+            // Cancel/Clear links
+            $('a.refresh_stream').live('click', function (event) {
+                self.refresh_stream(true);
+                event.preventDefault();
+            });
+
+            // load messages
+            this.show_default_stream();
+        },
+
+        refresh_stream: function (force) {
+            if (!force) {
+                // TODO: check for incomplete form
+                if (false) {
+
+                }
             }
-        }
-        $('#app-stream-heading').hide();
+            $('#app-stream-heading').hide();
 
-        this.show_default_stream();
+            this.show_default_stream();
 
-    },
+        },
 
-    show_default_stream: function (offset) {
-        offset = offset || 0;
+        show_default_stream: function (offset) {
 
-        var self = this;
-        this.las_api_call = 'default_stream';
+            offset = offset || 0;
 
-        var params = {
-            action: 'get_rides',
-            limit: this.options.limit,
-            offset: offset,
-            hs_params: this.options.hs_params
-        };
+            var self = this;
+            this.las_api_call = 'default_stream';
 
-        if (offset == 0) {
-            self.startLoading();
-        }
 
-        self.clearAjax();
-        self.xhr = $.post('ajax.php', params, function (data) {
-            console.debug(data);
-            var rides = data.rides;
-            var template = self.options.template;
-            var html;
-
-            if (data.error != undefined && data.error.length) {
-                self.showError(data.error);
+            if (!this.options.connected) {
+                self.showError("Please connect to your Strava account.");
                 return;
             }
 
+            var params = {
+                action: 'get_rides',
+                limit: this.options.limit,
+                offset: offset,
+                hs_params: this.options.hs_params
+            };
+
             if (offset == 0) {
-                self.stopLoading();
-                if (!rides.length) {
-                    $('#app-stream-heading').html('No tweets found');
+                self.startLoading();
+            }
+
+            self.clearAjax();
+            self.xhr = $.post('ajax.php', params, function (data) {
+                var rides = data.rides;
+                var template = self.options.template;
+                var html;
+
+                if (data.error != undefined && data.error.length) {
+                    self.showError(data.error);
                     return;
                 }
+
+                if (offset == 0) {
+                    self.stopLoading();
+                    if (!rides.length) {
+                        $('#app-stream-heading').html('No rides found');
+                        return;
+                    }
+                }
+                html = '';
+                if (rides.length) {
+                    html += $.map(rides,function (ride) {
+                        return template
+                            .replace(/\{\{name\}\}/g, ride.name)
+                            .replace(/\{\{id\}\}/g, ride.id)
+                            .replace(/\{\{permalink\}\}/g, 'http://app.strava.com/activities/' + ride.id)
+                            .replace(/\{\{date\}\}/g, $.format.date(new Date(ride.ts * 1000), self.options.dateFormat))
+                            .replace(/\{\{distance\}\}/g, (ride.distance / 1000).toFixed(2))
+                            .replace(/\{\{avg_speed\}\}/g, ride.average_speed.toFixed(2))
+                            .replace(/\{\{moving_time\}\}/g, Math.floor(ride.moving_time / 3600) + 'hr ' + Math.floor((ride.moving_time % 3600) / 60) + 'm')
+                            .replace(/\{\{elevation_gain\}\}/g, ride.elevation_gain)
+                    }).join('');
+                }
+                if (rides.length < self.options.limit) {
+                    html += '<div class="hs_noMessage"> No more rides.</div>';
+                } else {
+                    html += self.options.showMoreHTML;
+                }
+
+                if (offset == 0) {
+                    self.elem.html(html);
+                } else {
+                    // loaded via "show more" => replace "show more" bar with html
+                    $('#show_more').replaceWith(html);
+                }
+
+                if (rides.length == self.options.limit) {
+                    $(window).bind('scroll', function () {
+                        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 20) {
+                            if ($('#show_more').data('loading_more') === false) {
+                                $('#show_more').data('loading_more', true);
+                                $('#show_more').addClass('hs_noMessage');
+                                $('#show_more').html(self.options.throbber);
+                                self.show_default_stream(offset + self.options.limit);
+                            }
+                        }
+                    });
+                }
+            }, "json");
+
+        },
+
+        search: function (start, end, offset) {
+            var self = this;
+
+            this.last_api_call = 'search';
+
+            offset = offset || 0;
+
+            if (!this.options.connected) {
+                self.showError("Please connect to your Strava account to see your rides.");
+                return;
             }
-            html = '';
-            if (rides.length) {
-                html += $.map(rides,function (ride) {
-                    return template
-                        .replace(/\{\{name\}\}/g, ride.name)
-                        .replace(/\{\{id\}\}/g, ride.id)
-                        .replace(/\{\{permalink\}\}/g, 'http://app.strava.com/activities/' + ride.id)
-                        .replace(/\{\{date\}\}/g, $.format.date(new Date(ride.ts * 1000), self.options.dateFormat))
-                        .replace(/\{\{distance\}\}/g, ride.distance/1000)
-                        .replace(/\{\{avg_speed\}\}/g, ride.average_speed.toFixed(2))
-                        .replace(/\{\{moving_time\}\}/g, ride.moving_time / 3600 + 'hr ' + ride.moving_time % 3600 + 'm')
-                        .replace(/\{\{elevation_gain\}\}/g, ride.elevation_gain)
-                }).join('');
+
+            var search_str = '';
+            if (start.length && end.length) {
+                search_str = 'between ' + start + ' and ' + end;
+            } else if (start.length) {
+                search_str = 'after ' + start;
+            } else if (end.length) {
+                search_str = 'before ' + end;
             }
-            if (rides.length < self.options.limit) {
-                html += '<div class="hs_noMessage"> No more rides.</div>';
-            } else {
-                html += self.options.showMoreHTML;
-            }
+
+
+            var params = {
+                action: 'get_rides',
+                limit: this.options.limit,
+                offset: offset,
+                hs_params: this.options.hs_params,
+                start_date: start,
+                end_date: end
+            };
 
             if (offset == 0) {
-                self.elem.html(html);
-            } else {
-                // loaded via "show more" => replace "show more" bar with html
-                $('#show_more').replaceWith(html);
+                $('#app-stream-heading').html('Searching for rides ' + search_str +
+                    '... (<a href="#" class="refresh_stream">Cancel</a>)'
+                )
+                ;
+                $('#app-stream-heading').show();
+                self.startLoading();
             }
 
-            if (rides.length == self.options.limit) {
-                $(window).bind('scroll', function () {
-                    if ($(window).scrollTop() >= $(document).height() - $(window).height() - 20) {
-                        if ($('#show_more').data('loading_more') === false) {
-                            $('#show_more').data('loading_more', true);
-                            $('#show_more').addClass('hs_noMessage');
-                            $('#show_more').html(self.options.throbber);
-                            self.show_default_stream(offset + self.options.limit);
-                        }
+            self.clearAjax();
+
+            self.xhr = $.post('ajax.php', params, function (data) {
+                var rides = data.rides;
+                var template = self.options.template;
+                var html;
+
+                if (data.error != undefined && data.error.length) {
+                    self.showError(data.error);
+                    return;
+                }
+
+                if (offset == 0) {
+                    $('#app-stream-heading').html('Search results for rides ' + search_str + '.(<a href="#" class="refresh_stream">Clear</a>)');
+                    self.stopLoading();
+                    if (!rides.length) {
+                        $('#app-stream-heading').html('No rides found ' + search_str + '.(<a href="#" class="refresh_stream">Clear</a>)');
+                        return;
                     }
-                });
+                }
+                html = '';
+                if (rides.length) {
+                    html += $.map(rides,function (ride) {
+                        return template
+                            .replace(/\{\{name\}\}/g, ride.name)
+                            .replace(/\{\{id\}\}/g, ride.id)
+                            .replace(/\{\{permalink\}\}/g, 'http://app.strava.com/activities/' + ride.id)
+                            .replace(/\{\{date\}\}/g, $.format.date(new Date(ride.ts * 1000), self.options.dateFormat))
+                            .replace(/\{\{distance\}\}/g, (ride.distance / 1000).toFixed(2))
+                            .replace(/\{\{avg_speed\}\}/g, ride.average_speed.toFixed(2))
+                            .replace(/\{\{moving_time\}\}/g, Math.floor(ride.moving_time / 3600) + 'hr ' + Math.floor((ride.moving_time % 3600) / 60) + 'm')
+                            .replace(/\{\{elevation_gain\}\}/g, ride.elevation_gain)
+                    }).join('');
+                }
+                if (rides.length < self.options.limit) {
+                    html += '<div class="hs_noMessage"> No more rides.</div>';
+                } else {
+                    html += self.options.showMoreHTML;
+                }
+
+                if (offset == 0) {
+                    self.elem.html(html);
+                } else {
+                    // loaded via "show more" => replace "show more" bar with html
+                    $('#show_more').replaceWith(html);
+                }
+
+                if (rides.length == self.options.limit) {
+                    $(window).bind('scroll', function () {
+                        if ($(window).scrollTop() >= $(document).height() - $(window).height() - 20) {
+                            if ($('#show_more').data('loading_more') === false) {
+                                $('#show_more').data('loading_more', true);
+                                $('#show_more').addClass('hs_noMessage');
+                                $('#show_more').html(self.options.throbber);
+                                self.show_default_stream(offset + self.options.limit);
+                            }
+                        }
+                    });
+                }
+            }, "json");
+        },
+
+        getMapDetails: function (ride_id) {
+            var self = this;
+
+            this.last_api_call = 'getMapDetails';
+
+            if (!this.options.connected) {
+                self.showError("Please connect to your Strava account to see your rides.");
+                return;
             }
-        }, "json");
 
-    },
+            var params = {
+                action: 'get_ride_route',
+                hs_params: this.options.hs_params,
+                ride_id: ride_id
+            };
 
-    clearAjax: function () {
-        try {
-            this.xhr.abort();
-        } catch (e) {
+            self.xhr = $.post('ajax.php', params, function (data) {
+                var ride = data;
+                var hs_params = self.options.hs_params;
 
+                if (data.error != null) {
+                    hsp.showStatusMessage('This ride has no map information.', 'warning');
+                    return;
+                } else {
+                    var qdata = new Array();
+                    for (prop in hs_params) {
+                        qdata.push(prop + '=' + hs_params[prop]);
+                    }
+                    console.debug(qdata);
+                    console.debug(location.host);
+                    hsp.showCustomPopup('http://' + location.host + '/map.php?' + qdata.join('&'), ride.name, 600, 380)
+                }
+            });
+        },
+
+        clearAjax: function () {
+            try {
+                this.xhr.abort();
+            } catch (e) {
+
+            }
+            $(window).unbind("scroll");
+        },
+
+        startLoading: function () {
+            this.elem.html(this.options.storiesLoadingHTML);
+        },
+
+        stopLoading: function () {
+            this.elem.html('');
+        },
+
+        showError: function (message) {
+            this.elem.html('<div class="hs_noMessage">' + message + '</div>');
         }
-        $(window).unbind("scroll");
-    },
-
-    startLoading: function () {
-        this.elem.html(this.options.storiesLoadingHTML);
-    },
-
-    stopLoading: function () {
-        this.elem.html('');
-    },
-
-    showError: function (message) {
-        this.elem.html('<div class="hs_noMessage">' + message + '</div>');
     }
-};
+    ;
 
 
 // jquery-dateFormat plugin
