@@ -218,7 +218,7 @@ if (isset($_GET['disconnect'])) {
                     <a href="#" dropdown="_uploadActivity" title="Upload Activity"><span
                             class="icon-19 write"></span>
                     </a>
-                    <a href="#" dropdown="_search" title="Search"><span
+                    <a href="#" dropdown="_search" title="Search Rides"><span
                             class="icon-19 search"></span>
                     </a>
 

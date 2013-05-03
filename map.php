@@ -85,7 +85,6 @@ if (!$_user['connected']) {
 
             $.post('ajax.php', params, function (data) {
                 var ride = data;
-                console.debug(ride);
                 var markers = new Array();
                 var coords = new Array();
                 var latlngBounds = new google.maps.LatLngBounds();
