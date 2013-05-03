@@ -140,8 +140,8 @@ switch ($_POST['action']) {
     case 'create_ride':
     $token = $_user['connected_user_token'];
     $data = array();
-    $data[] = array(date(DATE_ATOM, $_POST['activity_start']),0,0);
-    $data[] = array(date(DATE_ATOM, $_POST['activity_end']),0,0);
+    $data[] = array(date(DATE_ATOM, $_POST['activity_start']),floatval($_POST['activity_lat']),floatval($_POST['activity_lng']));
+    $data[] = array(date(DATE_ATOM, $_POST['activity_end']),floatval($_POST['activity_lat']),floatval($_POST['activity_lng']));
     $response = $strava->createRide($token, $_POST['activity_fields'], $data, $_POST['activity_name'], $_POST['activity_type']);
     handle_strava_api_response($response);
     break;
