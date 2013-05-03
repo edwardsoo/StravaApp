@@ -309,8 +309,7 @@ var stravaStream = {
                     for (prop in hs_params) {
                         qdata.push(prop + '=' + hs_params[prop]);
                     }
-                    console.debug(qdata);
-                    console.debug(location.host);
+                    qdata.push('ride_id='+ride.id);
                     hsp.showCustomPopup('http://' + location.host + '/map.php?' + qdata.join('&'), ride.name, 600, 380)
                 }
             });
