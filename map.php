@@ -58,9 +58,16 @@ if (!$_user['connected']) {
             height: 100%
         }
     </style>
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
-    <script type="text/javascript" src="http://static.hootsuite.com/jsapi/0-5/hsp.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
+    <?php if ($_SERVER['HTTPS'] == 'on'): ?>
+        <script type="text/javascript" src="https://d2l6uygi1pgnys.cloudfront.net/jsapi/0-5/hsp.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
+    <?php else: ?>
+        <script type="text/javascript" src="http://static.hootsuite.com/jsapi/0-5/hsp.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
+    <?php endif; ?>
+
     <script type="text/javascript">
         function initialize() {
             var mapOptions = {
